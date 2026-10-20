@@ -1,0 +1,9 @@
+﻿[DT011] VD01  (Vi du phieu)
+  input   : [8, 3, 5, 1, 9, 2]
+  output  : [1, 2, 3, 5, 8, 9]
+  ky vong : [1, 2, 3, 5, 8, 9]
+  so sanh : 15   (n(n-1)/2 = 15)
+  doi cho : 5   (toi da n-1 = 5)
+  min luot: [4, 6, 6, 6, 6]
+  ket qua : PASS
+

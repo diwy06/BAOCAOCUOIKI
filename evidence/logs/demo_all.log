@@ -1,0 +1,25 @@
+﻿[DT011] DEMO toan bo ca
+
+[DT011] TONG HOP 13 ca
+Ma           n   So sanh   Doi cho   Ket qua
+---------------------------------------------
+VD01         6        15         5   PASS
+VD02         3         3         1   PASS
+TK01         5        10         4   PASS
+TK02         5        10         2   PASS
+BIEN01       0         0         0   PASS
+BIEN02       1         0         0   PASS
+BIEN03       3         3         0   PASS
+BIEN04       3         3         0   PASS
+KT01         5        10         3   PASS
+KT02         3         3         2   PASS
+KT03         2         1         1   PASS
+KT04       100      4950         0   PASS
+KT05        50      1225        45   PASS
+---------------------------------------------
+Tong ket: 13/13 ca PASS
+
+[DT011] DEMO LOI01 - validator tu choi input sai
+  n = 2001 vuot gioi han                 -> ArgumentError: n = 2001 vuot gioi han 2000
+  |a[i]| = 10^6 + 1 vuot gioi han        -> ArgumentError: |a[1]| = 1000001 vuot gioi han 1000000
+  khong phai Vector{Int}                 -> ArgumentError: a phai la Vector{Int}, nhan duoc Vector{Float64}
