@@ -4,7 +4,7 @@
 
 ## Mốc 1 — Nền tảng: mã lõi, kiểm thử, phần đầu báo cáo
 
-Trạng thái: **hoàn thành**
+Trạng thái: **hoàn thành** — ngày 20/10/2026
 
 - [x] Khởi tạo repo, `.gitignore`, README, nhật ký tiến độ
 - [x] `src/DT011.jl`: validator, `tim_min_doan`, `sap_xep_lua_chon`,

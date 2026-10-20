@@ -15,7 +15,7 @@ ghép thành tệp `.docx` bằng script `docs/build_bao_cao.py`.
 
 | Mốc | Nội dung | Trạng thái |
 |-----|----------|-----------|
-| 1 | Khung repo, mã lõi + bộ kiểm thử, báo cáo phần đầu (bìa, phiếu, Ch1, Ch2) | Đang làm |
+| 1 | Khung repo, mã lõi + bộ kiểm thử, báo cáo phần đầu (bìa, phiếu, Ch1, Ch2) | Hoàn thành 20/10/2026 |
 | 2 | Chương 3, kết quả kiểm thử, ảnh minh chứng A01–A09 | Chưa |
 | 3 | Khảo sát quy mô, GitHub, Chương 5, phụ lục, xuất DOCX/PDF | Chưa |
 
