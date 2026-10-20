@@ -30,9 +30,12 @@ import re
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 from docx import Document
 from docx.enum.section import WD_SECTION
-from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK, WD_LINE_SPACING
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -147,14 +150,15 @@ def setup_document():
     section.right_margin = Cm(2.0)
     section.header_distance = Cm(1.2)
     section.footer_distance = Cm(1.2)
+    section.different_first_page_header_footer = True  # bìa không có header/footer
 
     normal = doc.styles["Normal"]
     normal.font.name = FONT_BODY
     normal.font.size = Pt(SIZE_BODY)
     normal.element.rPr.rFonts.set(qn("w:eastAsia"), FONT_BODY)
     pf = normal.paragraph_format
-    pf.line_spacing = 1.3
-    pf.space_after = Pt(6)
+    pf.line_spacing = 1.25
+    pf.space_after = Pt(4)
     pf.space_before = Pt(0)
     pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
@@ -270,11 +274,27 @@ def add_table(doc, rows):
     table = doc.add_table(rows=len(rows), cols=n_cols)
     table.style = "Table Grid"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.autofit = True
+    table.autofit = False
+
+    # bề rộng cột theo độ dài nội dung, giới hạn để cột không quá hẹp
+    usable = 16.0  # cm (A4 trừ lề 3 + 2)
+    weights = []
+    for c in range(n_cols):
+        longest = max(len(r[c]) for r in rows)
+        weights.append(min(max(longest, 10), 46) + 6.0)
+    total = sum(weights)
+    widths = [max(usable * w / total, usable * 0.11) for w in weights]
+    scale = usable / sum(widths)
+    widths = [w * scale for w in widths]
+
+    for c, w in enumerate(widths):
+        table.columns[c].width = Cm(w)
 
     for r_idx, row in enumerate(rows):
         for c_idx, text in enumerate(row):
             cell = table.cell(r_idx, c_idx)
+            cell.width = Cm(widths[c_idx])
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             cell.text = ""
             p = cell.paragraphs[0]
             pf = p.paragraph_format
@@ -282,12 +302,21 @@ def add_table(doc, rows):
             pf.space_after = Pt(2)
             pf.line_spacing = 1.05
             pf.alignment = (
-                WD_ALIGN_PARAGRAPH.CENTER if (r_idx == 0 or len(text) <= 14)
+                WD_ALIGN_PARAGRAPH.CENTER if (r_idx == 0 or len(text) <= 8)
                 else WD_ALIGN_PARAGRAPH.LEFT
             )
+            # giữ cả bảng trên một trang: mọi dòng trừ dòng cuối nối với dòng sau
+            if r_idx < len(rows) - 1:
+                pf.keep_with_next = True
             add_inline(p, text, size=SIZE_TABLE, bold=(r_idx == 0))
             if r_idx == 0:
                 shade(cell._tc, "E7E6E6")
+
+    # không cho một dòng bị cắt đôi giữa hai trang
+    for row in table.rows:
+        trPr = row._tr.get_or_add_trPr()
+        cant_split = OxmlElement("w:cantSplit")
+        trPr.append(cant_split)
 
     # lặp dòng tiêu đề khi bảng sang trang
     tr = table.rows[0]._tr
@@ -321,6 +350,9 @@ def add_image(doc, path, caption):
 
 def add_cover(doc, lines):
     """Trang bìa: mỗi dòng có tiền tố [s14,b] (cỡ chữ, đậm)."""
+    for _ in range(2):
+        sp = doc.add_paragraph()
+        sp.paragraph_format.space_after = Pt(0)
     for raw in lines:
         if not raw.strip():
             doc.add_paragraph().paragraph_format.space_after = Pt(0)
