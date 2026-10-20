@@ -1,0 +1,17 @@
+# Python (script xuất báo cáo)
+__pycache__/
+*.py[cod]
+.venv/
+
+# Word/Excel tạm
+~$*
+*.tmp
+
+# Hệ điều hành
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Julia
+Manifest.toml
+*.cov
