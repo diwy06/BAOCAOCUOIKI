@@ -492,7 +492,7 @@ def build():
     first_block = True
 
     for src in sources:
-        for kind, payload in parse_blocks(src.read_text(encoding="utf-8")):
+        for kind, payload in parse_blocks(src.read_text(encoding="utf-8-sig")):
             if kind == "cover":
                 add_cover(doc, payload)
             elif kind in ("h1", "h2", "h3"):

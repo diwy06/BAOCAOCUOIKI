@@ -1,4 +1,4 @@
-﻿# PHIẾU CHẤM VÀ ĐỐI CHIẾU MINH CHỨNG
+# PHIẾU CHẤM VÀ ĐỐI CHIẾU MINH CHỨNG
 
 Dùng rubric chung và hướng dẫn minh chứng đúng mã đề trong tệp 00_HUONG_DAN_SINH_VIEN.html. Không tự điền điểm khi chưa được chấm.
 
