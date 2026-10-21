@@ -13,13 +13,15 @@ ghép thành tệp `.docx` bằng script `docs/build_bao_cao.py`.
 
 ## Tiến độ
 
-| Mốc | Nội dung | Trạng thái |
-|-----|----------|-----------|
-| 1 | Khung repo, mã lõi + bộ kiểm thử, báo cáo phần đầu (bìa, phiếu, Ch1, Ch2) | Hoàn thành 20/10/2026 |
-| 2 | Chương 3, kết quả kiểm thử, ảnh minh chứng A01–A09 | Chưa |
-| 3 | Khảo sát quy mô, GitHub, Chương 5, phụ lục, xuất DOCX/PDF | Chưa |
+| Tiến độ | Nội dung | Trạng thái |
+|---------|----------|-----------|
+| 1 | Khung repo, mã lõi + bộ kiểm thử, báo cáo phần đầu (bìa, phiếu, Ch1, Ch2) | Hoàn thành 21/10/2026 |
+| 2 | Chương 3–5, kết quả kiểm thử, ảnh minh chứng, phụ lục, bản đầy đủ | Đang làm |
 
-Chi tiết từng mốc: xem [`docs/TIEN_DO.md`](docs/TIEN_DO.md).
+Hai tiến độ nối tiếp nhau: bản của tiến độ 2 là bản đầy đủ, chứa phần đầu của
+tiến độ 1 ở đúng vị trí và đúng số trang.
+
+Chi tiết từng tiến độ: xem [`docs/TIEN_DO.md`](docs/TIEN_DO.md).
 
 ## Cấu trúc
 
