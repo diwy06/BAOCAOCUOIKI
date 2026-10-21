@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ghép nguồn Markdown trong docs/bao_cao/ thành tệp DOCX nộp bài.
+Ghép nguồn Markdown trong docs/bao_cao/ thành tệp DOCX báo cáo.
 
 Cách dùng (từ thư mục gốc repo):
-    python docs/build_bao_cao.py
+    python docs/build_bao_cao.py                 # bản đầy đủ
+    python docs/build_bao_cao.py --den 20        # bản cắt đến hết Chương 2
 
-Nguồn:  docs/bao_cao/*.md  (ghép theo thứ tự tên tệp)
-Đích:   docs/N24DCDT022_DT011_TranHuuDuy_BaoCao.docx
+Cả hai bản cắt từ cùng một nguồn nên phần đầu giống nhau từng trang.
 
-Cú pháp Markdown được hỗ trợ (tập con, đủ cho báo cáo):
+Cú pháp Markdown:
     # H1 / ## H2 / ### H3      tiêu đề chương, mục, tiểu mục
+    #! Tiêu đề                 tiêu đề phụ (MỤC LỤC...), không vào mục lục
     | a | b |                   bảng, dòng đầu là tiêu đề cột
     ``` ... ```                 khối mã
     - mục                       gạch đầu dòng
-    > ghi chú                   đoạn ghi chú in nghiêng, thụt lề
-    Bảng 1.1 ...                chú thích bảng (in đậm, canh giữa)
-    ![Hình 4.1 ...](đường dẫn)  chèn ảnh kèm chú thích
+    > ghi chú                   đoạn ghi chú in nghiêng
+    Bảng 1.1 ...                chú thích bảng (style CaptionBang)
+    Hình 4.1 ...                chú thích hình (style CaptionHinh)
+    ![...](đường dẫn)           chèn ảnh, phần trong [] là chú thích hình
     [[PAGEBREAK]]               ngắt trang
-    [[TOC]]                     mục lục tự động (cập nhật bằng F9 trong Word)
-    ::: bia ... :::             trang bìa, mỗi dòng có tiền tố [s14,b] ...
-
-Chữ đậm **như này**, chữ nghiêng *như này*, mã `như này`.
+    [[SECT]]                    sang section mới, số trang Ả Rập từ 1
+    [[TOC]] / [[LOT]] / [[LOF]] mục lục / danh sách bảng / danh sách hình
+    ::: bia ... :::             trang bìa
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -36,14 +38,14 @@ if hasattr(sys.stdout, "reconfigure"):
 from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK, WD_LINE_SPACING
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = ROOT / "docs" / "bao_cao"
-OUT_DOCX = ROOT / "docs" / "N24DCDT022_DT011_TranHuuDuy_BaoCao.docx"
+DOCS_DIR = ROOT / "docs"
 
 FONT_BODY = "Times New Roman"
 FONT_CODE = "Consolas"
@@ -52,6 +54,16 @@ SIZE_TABLE = 10.5
 SIZE_CAPTION = 11
 
 HEADER_TEXT = "Báo cáo đồ án INT13185 — Trần Hữu Duy — N24DCDT022 — DT011"
+
+STYLE_CAP_BANG = "CaptionBang"
+STYLE_CAP_HINH = "CaptionHinh"
+STYLE_TIEU_DE = "TieuDePhu"
+
+SECTPR_AFTER_PGNUM = (
+    "w:cols", "w:formProt", "w:vAlign", "w:noEndnote", "w:titlePg",
+    "w:textDirection", "w:bidi", "w:rtlGutter", "w:docGrid",
+    "w:printerSettings", "w:sectPrChange",
+)
 
 
 # --------------------------------------------------------------------------
@@ -77,7 +89,6 @@ def set_run_font(run, name=FONT_BODY, size=None, bold=None, italic=None, color=N
 
 
 def shade(element, fill):
-    """Tô nền cho đoạn văn hoặc ô bảng."""
     pr = element.get_or_add_tcPr() if element.tag.endswith("tc") else element.get_or_add_pPr()
     shd = OxmlElement("w:shd")
     shd.set(qn("w:val"), "clear")
@@ -87,32 +98,49 @@ def shade(element, fill):
 
 
 def add_field(paragraph, instruction, placeholder=""):
-    """Chèn field Word (ví dụ PAGE, TOC)."""
-    run = paragraph.add_run()
+    """Chèn field Word (PAGE, TOC...).
+
+    Mỗi thành phần của field phải nằm trong một run riêng; gộp tất cả vào một
+    run sẽ tạo field hỏng, Word có thể treo khi cập nhật.
+    """
+    def run_with(child):
+        r = paragraph.add_run()
+        r._r.append(child)
+        return r
+
     begin = OxmlElement("w:fldChar")
     begin.set(qn("w:fldCharType"), "begin")
+    run_with(begin)
+
     instr = OxmlElement("w:instrText")
     instr.set(qn("xml:space"), "preserve")
     instr.text = instruction
+    run_with(instr)
+
     separate = OxmlElement("w:fldChar")
     separate.set(qn("w:fldCharType"), "separate")
+    run_with(separate)
+
+    if placeholder:
+        paragraph.add_run(placeholder)
+
     end = OxmlElement("w:fldChar")
     end.set(qn("w:fldCharType"), "end")
-    run._r.append(begin)
-    run._r.append(instr)
-    run._r.append(separate)
-    if placeholder:
-        run.add_text(placeholder)
-    run._r.append(end)
-    return run
+    run_with(end)
 
 
-def keep_with_next(paragraph, value=True):
-    paragraph.paragraph_format.keep_with_next = value
+def set_page_numbering(section, fmt="decimal", start=1):
+    sectPr = section._sectPr
+    for old in sectPr.findall(qn("w:pgNumType")):
+        sectPr.remove(old)
+    el = OxmlElement("w:pgNumType")
+    el.set(qn("w:fmt"), fmt)
+    el.set(qn("w:start"), str(start))
+    sectPr.insert_element_before(el, *SECTPR_AFTER_PGNUM)
 
 
 # --------------------------------------------------------------------------
-# Định dạng văn bản nội tuyến: **đậm**, *nghiêng*, `mã`
+# Định dạng nội tuyến
 # --------------------------------------------------------------------------
 INLINE_RE = re.compile(r"(\*\*.+?\*\*|`[^`]+`|\*[^*]+?\*)")
 
@@ -136,7 +164,7 @@ def add_inline(paragraph, text, size=SIZE_BODY, bold=False, italic=False, name=F
 
 
 # --------------------------------------------------------------------------
-# Document va kiểu
+# Document và kiểu
 # --------------------------------------------------------------------------
 def setup_document():
     doc = Document()
@@ -150,7 +178,8 @@ def setup_document():
     section.right_margin = Cm(2.0)
     section.header_distance = Cm(1.2)
     section.footer_distance = Cm(1.2)
-    section.different_first_page_header_footer = True  # bìa không có header/footer
+    section.different_first_page_header_footer = True
+    set_page_numbering(section, "lowerRoman", 1)
 
     normal = doc.styles["Normal"]
     normal.font.name = FONT_BODY
@@ -180,14 +209,38 @@ def setup_document():
         st.paragraph_format.line_spacing = 1.2
         st.paragraph_format.keep_with_next = True
 
-    # Header
+    for style_name in (STYLE_CAP_BANG, STYLE_CAP_HINH):
+        st = doc.styles.add_style(style_name, 1)  # 1 = paragraph style
+        st.base_style = doc.styles["Normal"]
+        st.font.name = FONT_BODY
+        st.font.size = Pt(SIZE_CAPTION)
+        st.font.bold = True
+        st.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        st.paragraph_format.first_line_indent = Cm(0)
+        st.paragraph_format.space_before = Pt(8)
+        st.paragraph_format.space_after = Pt(3)
+        st.paragraph_format.keep_with_next = True
+        st.element.rPr.rFonts.set(qn("w:eastAsia"), FONT_BODY)
+
+    st = doc.styles.add_style(STYLE_TIEU_DE, 1)
+    st.base_style = doc.styles["Normal"]
+    st.font.name = FONT_BODY
+    st.font.size = Pt(16)
+    st.font.bold = True
+    st.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    st.paragraph_format.first_line_indent = Cm(0)
+    st.paragraph_format.space_before = Pt(0)
+    st.paragraph_format.space_after = Pt(14)
+    st.paragraph_format.page_break_before = True
+    st.paragraph_format.keep_with_next = True
+    st.element.rPr.rFonts.set(qn("w:eastAsia"), FONT_BODY)
+
     header = section.header
     hp = header.paragraphs[0]
     hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     hr = hp.add_run(HEADER_TEXT)
     set_run_font(hr, FONT_BODY, 9, italic=True, color=RGBColor(0x55, 0x55, 0x55))
 
-    # Footer: "Trang N"
     footer = section.footer
     fp = footer.paragraphs[0]
     fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -195,15 +248,32 @@ def setup_document():
     set_run_font(r1, FONT_BODY, 10)
     add_field(fp, "PAGE", "1")
 
+    settings = doc.settings.element
+    uf = OxmlElement("w:updateFields")
+    uf.set(qn("w:val"), "true")
+    settings.append(uf)
+
     return doc
+
+
+def add_body_section(doc):
+    """Sang section mới: đánh số trang Ả Rập bắt đầu từ 1."""
+    new = doc.add_section(WD_SECTION.NEW_PAGE)
+    new.top_margin = Cm(2.5)
+    new.bottom_margin = Cm(2.5)
+    new.left_margin = Cm(3.0)
+    new.right_margin = Cm(2.0)
+    new.different_first_page_header_footer = False
+    set_page_numbering(new, "decimal", 1)
+    return new
 
 
 # --------------------------------------------------------------------------
 # Các khối nội dung
 # --------------------------------------------------------------------------
-def add_heading(doc, text, level, first_block=False):
+def add_heading(doc, text, level, first_block=False, suppress_break=False):
     p = doc.add_paragraph(style=f"Heading {level}")
-    if level == 1 and not first_block:
+    if level == 1 and not first_block and not suppress_break:
         p.paragraph_format.page_break_before = True
     run = p.add_run(text.strip())
     set_run_font(run, FONT_BODY, {1: 16, 2: 14, 3: 13}[level], bold=True)
@@ -238,14 +308,8 @@ def add_note(doc, text):
     return p
 
 
-def add_caption(doc, text):
-    p = doc.add_paragraph()
-    pf = p.paragraph_format
-    pf.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    pf.space_before = Pt(10)
-    pf.space_after = Pt(4)
-    pf.first_line_indent = Cm(0)
-    pf.keep_with_next = True
+def add_caption(doc, text, style=STYLE_CAP_BANG):
+    p = doc.add_paragraph(style=style)
     run = p.add_run(text.strip())
     set_run_font(run, FONT_BODY, SIZE_CAPTION, bold=True)
     return p
@@ -276,8 +340,7 @@ def add_table(doc, rows):
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     table.autofit = False
 
-    # bề rộng cột theo độ dài nội dung, giới hạn để cột không quá hẹp
-    usable = 16.0  # cm (A4 trừ lề 3 + 2)
+    usable = 16.0  # cm
     weights = []
     for c in range(n_cols):
         longest = max(len(r[c]) for r in rows)
@@ -305,20 +368,16 @@ def add_table(doc, rows):
                 WD_ALIGN_PARAGRAPH.CENTER if (r_idx == 0 or len(text) <= 8)
                 else WD_ALIGN_PARAGRAPH.LEFT
             )
-            # giữ cả bảng trên một trang: mọi dòng trừ dòng cuối nối với dòng sau
             if r_idx < len(rows) - 1:
                 pf.keep_with_next = True
             add_inline(p, text, size=SIZE_TABLE, bold=(r_idx == 0))
             if r_idx == 0:
                 shade(cell._tc, "E7E6E6")
 
-    # không cho một dòng bị cắt đôi giữa hai trang
     for row in table.rows:
         trPr = row._tr.get_or_add_trPr()
-        cant_split = OxmlElement("w:cantSplit")
-        trPr.append(cant_split)
+        trPr.append(OxmlElement("w:cantSplit"))
 
-    # lặp dòng tiêu đề khi bảng sang trang
     tr = table.rows[0]._tr
     trPr = tr.get_or_add_trPr()
     tblHeader = OxmlElement("w:tblHeader")
@@ -339,17 +398,13 @@ def add_image(doc, path, caption):
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(6)
     p.paragraph_format.space_after = Pt(2)
-    p.add_run().add_picture(str(full), width=Cm(15.5))
+    p.paragraph_format.keep_with_next = True
+    p.add_run().add_picture(str(full), width=Cm(15.2))
     if caption:
-        cp = doc.add_paragraph()
-        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        cp.paragraph_format.space_after = Pt(10)
-        run = cp.add_run(caption)
-        set_run_font(run, FONT_BODY, SIZE_CAPTION, italic=True)
+        add_caption(doc, caption, STYLE_CAP_HINH)
 
 
 def add_cover(doc, lines):
-    """Trang bìa: mỗi dòng có tiền tố [s14,b] (cỡ chữ, đậm)."""
     for _ in range(2):
         sp = doc.add_paragraph()
         sp.paragraph_format.space_after = Pt(0)
@@ -377,11 +432,17 @@ def add_cover(doc, lines):
         set_run_font(run, FONT_BODY, size, bold=bold)
 
 
+def add_toc_field(doc, instruction, placeholder):
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(6)
+    add_field(p, instruction, placeholder)
+    return p
+
+
 # --------------------------------------------------------------------------
 # Bộ phân tích Markdown
 # --------------------------------------------------------------------------
 def parse_blocks(text):
-    """Tách văn bản thành danh sách (loại, nội dung)."""
     blocks = []
     lines = text.splitlines()
     i = 0
@@ -393,7 +454,6 @@ def parse_blocks(text):
             i += 1
             continue
 
-        # khối bìa
         if stripped == "::: bia":
             i += 1
             buf = []
@@ -419,18 +479,21 @@ def parse_blocks(text):
             i += 1
             continue
 
-        if stripped == "[[TOC]]":
-            blocks.append(("toc", None))
+        if stripped == "[[SECT]]":
+            blocks.append(("sect", None))
             i += 1
             continue
 
-        # bảng: các dòng liên tiếp bắt đầu bằng |
+        if stripped in ("[[TOC]]", "[[LOT]]", "[[LOF]]"):
+            blocks.append((stripped.strip("[]").lower(), None))
+            i += 1
+            continue
+
         if stripped.startswith("|"):
             buf = []
             while i < len(lines) and lines[i].strip().startswith("|"):
                 row = lines[i].strip()
                 if not re.fullmatch(r"\|[\s:\-|]+\|", row):
-                    # "\|" cho phép dấu gạch đứng trong ô (ví dụ |a[i]|)
                     row = row.replace("\\|", "\x01")
                     cells = [c.replace("\x01", "|").strip() for c in row.strip("|").split("|")]
                     buf.append(cells)
@@ -441,6 +504,11 @@ def parse_blocks(text):
         m = re.match(r"^(#{1,3})\s+(.*)$", stripped)
         if m:
             blocks.append(("h%d" % len(m.group(1)), m.group(2)))
+            i += 1
+            continue
+
+        if stripped.startswith("#!"):
+            blocks.append(("title", stripped[2:].strip()))
             i += 1
             continue
 
@@ -460,18 +528,20 @@ def parse_blocks(text):
             i += 1
             continue
 
-        if re.match(r"^(Bảng|Hình)\s", stripped):
-            blocks.append(("caption", stripped))
+        m = re.match(r"^(Bảng|Hình)\s+\S+", stripped)
+        if m:
+            kind = STYLE_CAP_BANG if m.group(1) == "Bảng" else STYLE_CAP_HINH
+            blocks.append(("caption", (stripped, kind)))
             i += 1
             continue
 
-        # đoạn văn: gộp các dòng liền nhau
         buf = [stripped]
         i += 1
         while i < len(lines):
             nxt = lines[i].strip()
             if (not nxt or nxt.startswith(("|", "```", "#", "> ", "- ", "* "))
-                    or re.match(r"^!\[", nxt) or nxt in ("[[PAGEBREAK]]", "[[TOC]]", "::: bia")):
+                    or re.match(r"^!\[", nxt)
+                    or nxt in ("[[PAGEBREAK]]", "[[TOC]]", "[[LOT]]", "[[LOF]]", "[[SECT]]", "::: bia")):
                 break
             buf.append(nxt)
             i += 1
@@ -480,23 +550,45 @@ def parse_blocks(text):
     return blocks
 
 
-def build():
+def select_sources(den=None, tu=None):
+    sources = sorted(SRC_DIR.glob("*.md"))
+    if den is not None:
+        sources = [s for s in sources if int(s.name[:2]) <= den]
+    if tu is not None:
+        sources = [s for s in sources if int(s.name[:2]) >= tu]
+    return sources
+
+
+def build(den=None, tu=None, out=None):
     if not SRC_DIR.exists():
         sys.exit(f"Không thấy thư mục nguồn: {SRC_DIR}")
 
-    sources = sorted(SRC_DIR.glob("*.md"))
+    sources = select_sources(den, tu)
     if not sources:
         sys.exit(f"Không có tệp .md nào trong {SRC_DIR}")
 
+    out_path = Path(out) if out else DOCS_DIR / "N24DCDT022_DT011_TranHuuDuy_BaoCao.docx"
+
     doc = setup_document()
+    if tu is not None:
+        # phần sau (bắt đầu từ Chương 3): số trang Ả Rập từ 1, có số ngay trang đầu
+        doc.sections[0].different_first_page_header_footer = False
+        set_page_numbering(doc.sections[0], "decimal", 1)
     first_block = True
+    vua_sang_section = False
 
     for src in sources:
         for kind, payload in parse_blocks(src.read_text(encoding="utf-8-sig")):
             if kind == "cover":
                 add_cover(doc, payload)
             elif kind in ("h1", "h2", "h3"):
-                add_heading(doc, payload, int(kind[1]), first_block)
+                add_heading(doc, payload, int(kind[1]), first_block,
+                            suppress_break=vua_sang_section)
+                vua_sang_section = False
+            elif kind == "title":
+                tp = doc.add_paragraph(style=STYLE_TIEU_DE)
+                trun = tp.add_run(payload)
+                set_run_font(trun, FONT_BODY, 16, bold=True)
             elif kind == "p":
                 add_paragraph(doc, payload)
             elif kind == "bullet":
@@ -504,7 +596,7 @@ def build():
             elif kind == "note":
                 add_note(doc, payload)
             elif kind == "caption":
-                add_caption(doc, payload)
+                add_caption(doc, payload[0], payload[1])
             elif kind == "code":
                 add_code(doc, payload)
             elif kind == "table":
@@ -513,18 +605,33 @@ def build():
                 add_image(doc, payload[0], payload[1])
             elif kind == "pagebreak":
                 doc.add_page_break()
+            elif kind == "sect":
+                add_body_section(doc)
+                vua_sang_section = True
             elif kind == "toc":
-                p = doc.add_paragraph()
-                add_field(p, 'TOC \\o "1-3" \\h \\z \\u',
-                          "Mục lục: bấm chuột phải → Update Field (hoặc Ctrl+A, F9) để cập nhật số trang.")
+                add_toc_field(doc, 'TOC \\o "1-3" \\h \\z \\u',
+                              "Mục lục sẽ được cập nhật khi mở bằng Word (Ctrl+A, F9).")
+            elif kind == "lot":
+                add_toc_field(doc, f'TOC \\h \\z \\t "{STYLE_CAP_BANG},1"',
+                              "Danh sách bảng sẽ được cập nhật khi mở bằng Word (Ctrl+A, F9).")
+            elif kind == "lof":
+                add_toc_field(doc, f'TOC \\h \\z \\t "{STYLE_CAP_HINH},1"',
+                              "Danh sách hình sẽ được cập nhật khi mở bằng Word (Ctrl+A, F9).")
             first_block = False
 
-    OUT_DOCX.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(OUT_DOCX)
-    print(f"Đã xuất: {OUT_DOCX}")
-    print(f"  nguồn: {len(sources)} tệp .md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(out_path)
+    print(f"Đã xuất: {out_path}")
+    print(f"  nguồn: {len(sources)} tệp .md ({sources[0].name} .. {sources[-1].name})")
     print(f"  số đoạn: {len(doc.paragraphs)}, số bảng: {len(doc.tables)}")
 
 
 if __name__ == "__main__":
-    build()
+    ap = argparse.ArgumentParser(description="Ghép nguồn Markdown thành DOCX báo cáo.")
+    ap.add_argument("--den", type=int, default=None,
+                    help="chỉ lấy các tệp nguồn có số thứ tự <= DEN")
+    ap.add_argument("--tu", type=int, default=None,
+                    help="chỉ lấy các tệp nguồn có số thứ tự >= TU")
+    ap.add_argument("--out", default=None, help="đường dẫn tệp DOCX đích")
+    a = ap.parse_args()
+    build(a.den, a.tu, a.out)

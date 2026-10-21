@@ -1,0 +1,12 @@
+﻿KHOA SAT DT011 - seed = 20261020
+So sanh ly thuyet: n(n-1)/2; so doi toi da: n-1
+
+     n    so sanh   doi chon    doi doi     t_chon(ms)      t_doi(ms)  tiledoi
+------ --------- --------- --------- ------------- ------------- -------
+     5         10          4          6         0.0004         0.0003     0.67
+    20        190         15        111         0.0007         0.0007     0.14
+   100       4950         93       2383         0.0075         0.0067     0.04
+   500     124750        492      64815         0.1573         0.1311     0.01
+
+Ghi chu: thoi gian chi de tham khao tren may ca nhan; ket luan do phuc tap
+dua tren so phep so sanh dem duoc, khong dua tren thoi gian do.

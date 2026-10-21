@@ -1,3 +1,5 @@
+[[SECT]]
+
 # CHƯƠNG 1. TỔNG QUAN ĐỀ TÀI
 
 ## 1.1. Bài toán và lý do thực hiện
