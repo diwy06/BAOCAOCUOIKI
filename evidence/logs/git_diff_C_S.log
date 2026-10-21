@@ -1,10 +1,27 @@
-﻿# So sanh ma giua commit C (e0db818) va commit S (b2956f8)
-# Lenh: git diff --stat e0db818 b2956f8 -- bin src spec bench
-# Ket qua (rong nghia la ma/test/input khong doi):
-(khong co thay doi)
+﻿# So sanh ma giua commit C va ban nop (HEAD)
+# C = e0db818fda1007c79bda71b8076cf6ccc7fa73a8
+# Lenh dung lai bat cu luc nao: git diff --stat e0db818 HEAD -- bin src spec bench
 
-# Toan bo thay doi giua C va S:
- evidence/images/09_check.png | Bin 15017 -> 14827 bytes
- evidence/images/10_clone.png | Bin 34936 -> 34448 bytes
- evidence/images/11_git.png   | Bin 73048 -> 73695 bytes
- 3 files changed, 0 insertions(+), 0 deletions(-)
+# [1] git diff --stat e0db818fda1007c79bda71b8076cf6ccc7fa73a8 HEAD -- bin src spec bench
+(rong - ma, kiem thu, bench khong doi)
+
+# [2] git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 HEAD
+M	evidence/images/01_VD01.png
+M	evidence/images/02_VD02.png
+M	evidence/images/03_TK01.png
+M	evidence/images/04_TK02.png
+M	evidence/images/05_BIEN01.png
+M	evidence/images/06_BIEN02.png
+A	evidence/images/07_BIEN03.png
+D	evidence/images/07_trace_VD01.png
+M	evidence/images/08_LOI01.png
+M	evidence/images/09_check.png
+D	evidence/images/10_clone.png
+A	evidence/images/10_clone_GitHub.png
+D	evidence/images/11_git.png
+A	evidence/images/11_github.png
+A	evidence/images/12_trace_VD01.png
+A	evidence/logs/git_diff_C_S.log
+
+# [3] Ket luan: chi tep minh chung (anh, log) thay doi; ma nguon, test va bench giu nguyen.
+# Thoi diem tao log: HEAD = 1d69099751a1b06ab2b5fffab8e007996be03c5f
