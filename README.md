@@ -11,17 +11,16 @@ Repo này chứa mã nguồn, bộ kiểm thử và báo cáo của đề tài.
 Mã nguồn viết bằng Julia; báo cáo viết bằng Markdown theo từng chương rồi
 ghép thành tệp `.docx` bằng script `docs/build_bao_cao.py`.
 
-## Tiến độ
+## Các phần đã làm
 
-| Tiến độ | Nội dung | Trạng thái |
-|---------|----------|-----------|
-| 1 | Khung repo, mã lõi + bộ kiểm thử, báo cáo phần đầu (bìa, phiếu, Ch1, Ch2) | Hoàn thành 21/10/2026 |
-| 2 | Chương 3–5, kết quả kiểm thử, ảnh minh chứng, phụ lục, bản đầy đủ | Đang làm |
+| Phần | Nội dung | Trạng thái |
+|------|----------|-----------|
+| Mã lõi | `src`, `bin`, `spec`, `bench`, bộ kiểm thử 14 ca | Xong |
+| Báo cáo | Chương 1–5, tài liệu tham khảo, phụ lục A–D | Xong |
+| Minh chứng | 11 ảnh A01–A11, log chạy thật | Xong |
+| Mô phỏng | `docs/MoPhong_SelectionSort_DT011.html` | Xong |
 
-Hai tiến độ nối tiếp nhau: bản của tiến độ 2 là bản đầy đủ, chứa phần đầu của
-tiến độ 1 ở đúng vị trí và đúng số trang.
-
-Chi tiết từng tiến độ: xem [`docs/TIEN_DO.md`](docs/TIEN_DO.md).
+Nhật ký chi tiết: xem [`docs/TIEN_DO.md`](docs/TIEN_DO.md).
 
 ## Cấu trúc
 
