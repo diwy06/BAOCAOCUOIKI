@@ -1,0 +1,10 @@
+﻿# So sanh ma giua commit C (e0db818) va commit S (b2956f8)
+# Lenh: git diff --stat e0db818 b2956f8 -- bin src spec bench
+# Ket qua (rong nghia la ma/test/input khong doi):
+(khong co thay doi)
+
+# Toan bo thay doi giua C va S:
+ evidence/images/09_check.png | Bin 15017 -> 14827 bytes
+ evidence/images/10_clone.png | Bin 34936 -> 34448 bytes
+ evidence/images/11_git.png   | Bin 73048 -> 73695 bytes
+ 3 files changed, 0 insertions(+), 0 deletions(-)
