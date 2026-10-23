@@ -1,14 +1,13 @@
-# So sanh ma giua commit C va commit S (ban nop)
+# So sanh ma giua commit C va ban nop (HEAD)
 # C = e0db818fda1007c79bda71b8076cf6ccc7fa73a8
-# S = 9723f83a656b789d07e8760f778c87e0ef2ba70b
-# Hai lenh duoi day chay lai duoc bat cu luc nao, khong phu thuoc HEAD:
-#   git diff --stat e0db818fda1007c79bda71b8076cf6ccc7fa73a8 9723f83a656b789d07e8760f778c87e0ef2ba70b -- bin src spec bench
-#   git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 9723f83a656b789d07e8760f778c87e0ef2ba70b
+# Lenh dung lai bat cu luc nao: git diff --stat e0db818 HEAD -- bin src spec bench
 
-$ git diff --stat e0db818fda1007c79bda71b8076cf6ccc7fa73a8 9723f83a656b789d07e8760f778c87e0ef2ba70b -- bin src spec bench
-(rong: ma nguon, kiem thu va bench khong doi giua C va S)
+# [1] git diff --stat e0db818fda1007c79bda71b8076cf6ccc7fa73a8 5b83aa9f -- bin src spec bench
+(rong - ma nguon, kiem thu, bench khong doi)
 
-$ git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 9723f83a656b789d07e8760f778c87e0ef2ba70b
+# [2] git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 5b83aa9f
+A	docs/tiendo/N24DCDT022_DT011_TranHuuDuy_TienDo1.docx
+A	docs/tiendo/N24DCDT022_DT011_TranHuuDuy_TienDo1.pdf
 M	evidence/images/01_VD01.png
 M	evidence/images/02_VD02.png
 M	evidence/images/03_TK01.png
@@ -26,8 +25,7 @@ A	evidence/images/11_github.png
 A	evidence/images/12_trace_VD01.png
 A	evidence/logs/git_diff_C_S.log
 
-$ git rev-parse 9723f83a656b789d07e8760f778c87e0ef2ba70b
-9723f83a656b789d07e8760f778c87e0ef2ba70b
-
-# Ket luan: chi tep minh chung (anh, log) thay doi; bin, src, spec, bench giu nguyen.
-# Vi vay ket qua chay tai C dung duoc cho ban nop S.
+# [3] Ket luan: ma nguon, test va bench giu nguyen giua C va ban nop.
+#     Thay doi chi la anh minh chung (chup man hinh that thay cho anh dung),
+#     log va ban bao cao tien do 1.
+# Thoi diem tao log: HEAD = 5b83aa9f8d5aa7c57d6dd3691e32b868a5af1b64
