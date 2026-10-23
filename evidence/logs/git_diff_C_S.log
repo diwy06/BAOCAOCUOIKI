@@ -5,7 +5,7 @@
 # [1] git diff --stat e0db818fda1007c79bda71b8076cf6ccc7fa73a8 -- bin src spec bench
 (rong - ma nguon, kiem thu, bench khong doi)
 
-# [2] git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 0f710ce25046c82712aedf4102289f67a80d970f
+# [2] git diff --name-status e0db818fda1007c79bda71b8076cf6ccc7fa73a8 c7d17ef42c0d27d3b9c111c70b5b0041d059270b
 A	docs/tiendo/N24DCDT022_DT011_TranHuuDuy_TienDo1.docx
 A	docs/tiendo/N24DCDT022_DT011_TranHuuDuy_TienDo1.pdf
 M	evidence/images/01_VD01.png
@@ -26,5 +26,6 @@ A	evidence/images/12_trace_VD01.png
 A	evidence/logs/git_diff_C_S.log
 
 # [3] Ket luan: ma nguon, test va bench giu nguyen giua C va ban nop.
-#     Thay doi chi la anh minh chung (anh chup man hinh that), log va bao cao tien do 1.
-# Thoi diem tao log: HEAD = 0f710ce25046c82712aedf4102289f67a80d970f
+#     Thay doi chi la anh minh chung (tat ca la anh chup man hinh that),
+#     log va ban bao cao tien do 1.
+# Thoi diem tao log: HEAD = c7d17ef42c0d27d3b9c111c70b5b0041d059270b
